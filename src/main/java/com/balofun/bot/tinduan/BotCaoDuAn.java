@@ -1,5 +1,7 @@
-package com.resdii.vars.bot.gg;
+package com.balofun.bot.tinduan;
 
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -9,12 +11,17 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.web.bind.annotation.RestController;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-public class BotGGWithProxy {
+public class BotCaoDuAn {
 
     // Cấu hình proxy
     private static String proxyHost = "103.95.197.104";
@@ -142,6 +149,7 @@ public class BotGGWithProxy {
             options.setProxy(proxy);
             options.setCapability("proxy", proxy);
             options.addArguments("user-agent=" + "MyUserAgent/" + UUID.randomUUID().toString());
+            options.addArguments("--start-maximized"); // Mở toàn màn hình (chỉ Windows)
         }
 
         driver = new ChromeDriver(options);
@@ -149,211 +157,172 @@ public class BotGGWithProxy {
         return driver;
     }
 
-    public static void fetchTopLand() {
+    public static void fetchPage() {
         try {
-            reloadWithFirefox(true);
 
-            System.out.println("*******************************fetchTopLand starting!*****************************");
+            System.out.println("*******************************https://propinsight.vn/ starting!*****************************");
 
-            String url = "https://varsland.vn/" + listURL[random.nextInt(listURL.length)];
-            driver.get(url);
-            webDriverWait.until(ExpectedConditions.jsReturnsValue("return document.readyState=='complete';"));
-            scrollWindow();
-            List<WebElement> linksWithMarkTag = driver.findElements(By.cssSelector("mark"));
-            for (int i = 0; i < linksWithMarkTag.size(); i++) {
-                try {
-                    WebElement link = linksWithMarkTag.get(i);
-                    String text = link.getText();
-                    hrefList.add(text);
-                } catch (StaleElementReferenceException e) {
-                    linksWithMarkTag = driver.findElements(By.cssSelector("mark"));
-                    i--;
-                }
-            }
-
-            for (int i = 0; i < hrefList.size(); i++) {
-                System.out.println(hrefList.get(i));
-            }
-            System.out.println("*******************************fetchTopLand done!*****************************");
-        } catch (Exception ex) {
-            reloadWithFirefox(true);
-        }
-    }
-
-    public static void openWebWithDynamiclink() {
-        if (hrefList.size() > 0) {
-            for (int i = 0; i < hrefList.size(); i++) {
-                try {
+            String url = "https://propinsight.vn/du-an?page=";
+            String filePath = "D:\\temp\\caoduan\\propinsight.csv";
+            try (FileOutputStream fos = new FileOutputStream(filePath);
+                 OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
+                 BufferedWriter writer = new BufferedWriter(osw)) {
+                for (int i = 0; i < 308; i++) {
+                    System.out.println(url + (i + 1));
                     reloadWithFirefox(true);
-                    driver.get("https://www.google.com");
-                    WebElement searchBox = driver.findElement(By.name("q"));
-                    searchBox.sendKeys(hrefList.get(i) + " vars");
+                    driver.get(url + (i + 1));
+                    webDriverWait.until(ExpectedConditions.jsReturnsValue("return document.readyState=='complete';"));
+                    List<WebElement> projectCardTag = driver.findElements(By.className("project-card"));
+                    for (int j = 0; j < projectCardTag.size(); j++) {
 
-                    try {
-                        Thread.sleep(random.nextInt(10000) + 10000);
-                    } catch (Exception ex) {
-                    }
+                        String trangThai = "";
+                        String giaBan = "";
+                        String tieuDe = "";
+                        String diaChi = "";
+                        String chuDauTu = "";
+                        String ngayDang = "";
 
-                    searchBox.submit();
-
-                    // Tìm tất cả các liên kết trong kết quả tìm kiếm
-                    List<WebElement> searchResults = driver.findElements(By.cssSelector("a"));
-
-                    // Duyệt qua các kết quả tìm kiếm và tìm URL bắt đầu với "varsland.vn"
-                    boolean found = false;
-                    for (WebElement result : searchResults) {
-                        String href = result.getAttribute("href");
-                        if (href != null && href.contains("varsland.vn")) {
-                            System.out.println("Tìm thấy URL: " + href);
-
-                            // Thực hiện click vào kết quả
-                            result.click();
-
-                            String initialUrl = driver.getCurrentUrl();
-                            webDriverWait.until(ExpectedConditions.not(ExpectedConditions.urlToBe(initialUrl)));
-
-                            try {
-                                Thread.sleep(random.nextInt(10000) + 10000);
-                            } catch (Exception ex) {
+                        try {
+                            //Get Trạng Thái và Giá Bán
+                            WebElement item = projectCardTag.get(j);
+                            List<WebElement> smallTags = item.findElements(By.className("is-elevated"));
+                            if (smallTags.size() >= 2) {
+                                trangThai = smallTags.get(0).getText();
+                                giaBan = smallTags.get(1).getText().replace(",", ".");
                             }
 
-                            scrollWindow();
-
-                            found = true;
-                            break; // Dừng sau khi tìm thấy và click vào URL đầu tiên
-                        }
-                    }
-
-                    if (!found) {
-                        System.out.println("Không tìm thấy kết quả nào có URL bắt đầu bằng 'varsland.vn'.");
-                    }
-                } catch (Exception e) {
-                    System.out.println("Fetch fail: " + hrefList.get(i));
-                    reloadWithFirefox(true);
-                }
-            }
-            hrefList.clear();
-        }
-
-        try {
-            Thread.sleep(random.nextInt(10000) + 10000);
-        } catch (Exception ex) {
-        }
-
-        try {
-            fetchTopLand();
-        } catch (Exception ex) {
-        }
-    }
-
-    public static void openWebWithKeyWord() {
-        if (provinces.length > 0) {
-            for (int i = 0; i < provinces.length; i++) {
-                try {
-                    reloadWithFirefox(true);
-                    driver.get("https://www.google.com");
-
-                    try {
-                        Thread.sleep(random.nextInt(5000) + 5000);
-                    } catch (Exception ex) {
-                    }
-
-                    WebElement searchBox = driver.findElement(By.name("q"));
-                    searchBox.sendKeys(textGoogle[random.nextInt(textGoogle.length)].replace("{TT}", provinces[random.nextInt(provinces.length)]));
-
-                    try {
-                        Thread.sleep(random.nextInt(5000) + 5000);
-                    } catch (Exception ex) {
-                    }
-
-                    searchBox.submit();
-
-                    try {
-                        Thread.sleep(random.nextInt(10000) + 10000);
-                    } catch (Exception ex) {
-                    }
-
-                    // Tìm tất cả các liên kết trong kết quả tìm kiếm
-                    List<WebElement> searchResults = driver.findElements(By.cssSelector("a"));
-
-                    // Duyệt qua các kết quả tìm kiếm và tìm URL bắt đầu với "varsland.vn"
-                    boolean found = false;
-                    for (WebElement result : searchResults) {
-                        String href = result.getAttribute("href");
-                        if (href != null && href.contains("varsland.vn")) {
-                            System.out.println("Tìm thấy URL: " + href);
-
-                            // Thực hiện click vào kết quả
-                            result.click();
-                            String initialUrl = driver.getCurrentUrl();
-                            webDriverWait.until(ExpectedConditions.not(ExpectedConditions.urlToBe(initialUrl)));
-
-                            scrollWindow();
-
-                            try {
-                                Thread.sleep(random.nextInt(10000) + 10000);
-                            } catch (Exception ex) {
+                            //Get TieuDe
+                            List<WebElement> projectCardTitle = item.findElements(By.className("project-card-title"));
+                            if (projectCardTitle.size() > 0) {
+                                tieuDe = projectCardTitle.get(0).getText().replace(",", "-");
                             }
 
-                            found = true;
-                            break; // Dừng sau khi tìm thấy và click vào URL đầu tiên
+                            //Get project-address
+                            List<WebElement> projectAddress = item.findElements(By.className("project-address"));
+                            if (projectAddress.size() > 0) {
+                                diaChi = projectAddress.get(0).getText().replace(",", "-");
+                            }
+
+                            //Get project-investor
+                            List<WebElement> projectInvestor = item.findElements(By.className("project-investor"));
+                            if (projectInvestor.size() > 0) {
+                                chuDauTu = projectInvestor.get(0).getText().replace(",", "-");
+                            }
+
+                            //Get project-publication-time
+                            List<WebElement> projectPublicationTime = item.findElements(By.className("project-publication-time"));
+                            if (projectPublicationTime.size() > 0) {
+                                ngayDang = projectPublicationTime.get(0).getText().replace(",", "-");
+                            }
+
+                            System.out.println(tieuDe + " - " + ngayDang);
+                            System.out.println(trangThai + " - " + giaBan);
+                            System.out.println(chuDauTu);
+                            System.out.println(diaChi);
+                            System.out.println("-----------------------------------------------------");
+
+                            writer.append(String.join(",", Arrays.asList(tieuDe, ngayDang, trangThai, giaBan, chuDauTu, diaChi)));
+                            writer.newLine();
+                        } catch (StaleElementReferenceException e) {
+                            System.out.println(e.getMessage());
                         }
                     }
+                    //break;
+                }
 
-                    if (!found) {
-                        System.out.println("Không tìm thấy kết quả nào có URL bắt đầu bằng 'varsland.vn'.");
+                System.out.println("*******************************propinsight done!*****************************");
+            }
+        } catch (IOException ex) {
+            System.err.println("Error creating CSV file: " + ex.getMessage());
+        }
+    }
+
+    public static void fetchPageBDS() {
+        try {
+
+            System.out.println("*******************************https://batdongsan.com.vn/ starting!*****************************");
+
+            String url = "https://batdongsan.com.vn/du-an-bat-dong-san/p";
+            String filePath = "D:\\temp\\caoduan\\batdongsan.csv";
+            try (FileOutputStream fos = new FileOutputStream(filePath);
+                 OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
+                 BufferedWriter writer = new BufferedWriter(osw)) {
+                for (int i = 567; i < 568; i++) {
+                    try {
+                        System.out.println(url + (i + 1));
+                        reloadWithFirefox(true);
+                        driver.get(url + (i + 1));
+                        webDriverWait.until(ExpectedConditions.jsReturnsValue("return document.readyState=='complete';"));
+                        List<WebElement> projectCardTag = driver.findElements(By.className("js__project-card"));
+                        for (int j = 0; j < projectCardTag.size(); j++) {
+
+                            String trangThai = "N/A";
+                            String giaBan = "N/A";
+                            String tieuDe = "N/A";
+                            String diaChi = "N/A";
+                            String chuDauTu = "N/A";
+                            String ngayDang = "N/A";
+
+                            //Get Trạng Thái và Giá Bán
+                            WebElement item = projectCardTag.get(j);
+                            List<WebElement> smallTags = item.findElements(By.className("re__prj-card-config-value"));
+                            if (smallTags.size() > 0) {
+                                giaBan = smallTags.get(0).getText().replace(",", ".").replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ").trim();
+                            }
+
+                            List<WebElement> tagInfo = item.findElements(By.className("re__prj-tag-info"));
+                            if (tagInfo.size() > 0) {
+                                trangThai = tagInfo.get(0).getText().replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ").trim();
+                            }
+
+                            //Get TieuDe
+                            List<WebElement> projectCardTitle = item.findElements(By.className("re__prj-card-title"));
+                            if (projectCardTitle.size() > 0) {
+                                tieuDe = projectCardTitle.get(0).getText().replace(",", "-").replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ").trim();
+                            }
+
+                            //Get project-address
+                            List<WebElement> projectAddress = item.findElements(By.className("re__prj-card-location"));
+                            if (projectAddress.size() > 0) {
+                                diaChi = projectAddress.get(0).getText().replace(",", "-").replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ").trim();
+                            }
+
+                            //Get project-investor
+                            List<WebElement> projectInvestor = item.findElements(By.className("re__prj-card-contact-avatar"));
+                            if (projectInvestor.size() > 0) {
+                                chuDauTu = projectInvestor.get(0).getAttribute("aria-label").replace(",", "-").replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ").trim();
+                            }
+
+                            //Get project-publication-time
+//                            List<WebElement> projectPublicationTime = item.findElements(By.className("project-publication-time"));
+//                            if (projectPublicationTime.size() > 0) {
+//                                ngayDang = projectPublicationTime.get(0).getText().replace(",","-");
+//                            }
+
+                            System.out.println(tieuDe + " - " + ngayDang);
+                            System.out.println(trangThai + " - " + giaBan);
+                            System.out.println(chuDauTu);
+                            System.out.println(diaChi);
+                            System.out.println("-----------------------------------------------------");
+
+                            writer.append(String.join(",", Arrays.asList(tieuDe, ngayDang, trangThai, giaBan, chuDauTu, diaChi)));
+                            writer.newLine();
+                        }
+                    } catch (StaleElementReferenceException | IOException e) {
+                        System.out.println(e.getMessage());
                     }
-                } catch (Exception e) {
-                    System.out.println("Fetch fail: " + hrefList.get(i));
-                    reloadWithFirefox(true);
                 }
+                System.out.println("*******************************propinsight done!*****************************");
             }
-            hrefList.clear();
+        } catch (
+                IOException ex) {
+            System.err.println("Error creating CSV file: " + ex.getMessage());
         }
 
-        try {
-            Thread.sleep(random.nextInt(10000) + 10000);
-        } catch (Exception ex) {
-        }
-
-        try {
-            fetchTopLand();
-        } catch (Exception ex) {
-        }
     }
 
-    public static void scrollWindow() {
-        try {
-            boolean atBottom = false;
-            Thread.sleep(random.nextInt(5000) + 5000);
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            while (!atBottom) {
-                js.executeScript("window.scrollBy(0, 500);");
-                Thread.sleep(random.nextInt(500) + 500);
-                Long currentHeight = (Long) js.executeScript("return window.scrollY + window.innerHeight;");
-                Long totalHeight = (Long) js.executeScript("return document.body.scrollHeight;");
-                if (currentHeight >= totalHeight) {
-                    atBottom = true;
-                }
-            }
-            Thread.sleep(random.nextInt(5000) + 5000);
-        } catch (Exception ex) {
-        }
-    }
-//
 //    public static void main(String[] args) {
-//        while (true) {
-//            try {
-//                if (isDynamicland) {
-//                    openWebWithDynamiclink();
-//                    isDynamicland = false;
-//                } else {
-//                    openWebWithKeyWord();
-//                    isDynamicland = true;
-//                }
-//            } catch (Exception ex) {
-//                System.out.println(ex.getMessage());
-//            }
-//        }
+//        //fetchPage();
+//        fetchPageBDS();
 //    }
 }

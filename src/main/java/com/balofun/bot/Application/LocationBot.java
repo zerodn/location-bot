@@ -1,9 +1,9 @@
-package com.resdii.vars.bot.Application;
+package com.balofun.bot.Application;
 
-import com.resdii.vars.bot.dto.ProxyApiDTO;
-import com.resdii.vars.bot.feign.impl.ProxyApiFeign;
-import com.resdii.vars.bot.util.CrawlUtil;
-import com.resdii.vars.bot.util.KillOldGeckodriver;
+import com.balofun.bot.dto.ProxyApiDTO;
+import com.balofun.bot.feign.impl.ProxyApiFeign;
+import com.balofun.bot.util.CrawlUtil;
+import com.balofun.bot.util.KillOldGeckodriver;
 import org.openqa.selenium.By;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;

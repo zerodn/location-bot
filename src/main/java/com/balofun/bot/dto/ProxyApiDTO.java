@@ -1,4 +1,4 @@
-package com.resdii.vars.bot.dto;
+package com.balofun.bot.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

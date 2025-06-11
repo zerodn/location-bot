@@ -1,4 +1,4 @@
-package com.resdii.vars.bot.util;
+package com.balofun.bot.util;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

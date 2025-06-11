@@ -1,4 +1,4 @@
-package com.resdii.vars.bot.config;
+package com.balofun.bot.config;
 
 import com.resdii.ms.common.config.AbstractFeignConfig;
 import org.springframework.context.annotation.Configuration;

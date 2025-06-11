@@ -1,4 +1,4 @@
-package com.resdii.vars.bot.feign;
+package com.balofun.bot.feign;
 
 /**
  * @author ANSI.

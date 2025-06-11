@@ -1,14 +1,9 @@
-package com.resdii.vars.bot.feign.impl;
+package com.balofun.bot.feign.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.resdii.vars.bot.dto.ProxyApiDTO;
+import com.balofun.bot.dto.ProxyApiDTO;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import java.io.IOException;
 
 /**
  * @author ANSI.
