@@ -1,11 +1,14 @@
 package com.balofun.bot.util;
 
+import com.balofun.bot.dto.ProxyApiDTO;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.BufferedReader;
@@ -25,6 +28,27 @@ public class CrawlUtil {
     private static WebDriverWait webDriverWait;
     public static Random random = new Random();
 
+    public static void retryFirefoxDriver(String url, ProxyApiDTO proxyApiDTO) {
+
+        if (firefoxDriver != null) {
+            try {
+                firefoxDriver.quit();
+            } catch (Exception e) {
+                System.err.println("⚠️ Lỗi khi đóng trình duyệt cũ: " + e.getMessage());
+            }
+        }
+
+//        if (proxyApiDTO != null && "success".equals(proxyApiDTO.status)) {
+//            ProxyApiDTO.Data data = proxyApiDTO.data;
+//            System.out.println(String.format("******************* Proxy IP %s", data.realIpAddress + ":" + data.httpPort));
+//            CrawlUtil.loadFirefoxDriver(data.realIpAddress, data.httpPort);
+//        } else {
+            CrawlUtil.loadFirefoxDriver();
+//        }
+        CrawlUtil.getWebDrive().get("https://shopeefood.vn/lien-he");
+        CrawlUtil.getWebDrive().get(url);
+    }
+
     public static WebDriver loadFirefoxDriver() {
         return loadFirefoxDriver(null, 0);
     }
@@ -39,25 +63,24 @@ public class CrawlUtil {
 
     public static WebDriver loadFirefoxDriver(String proxyHost, int proxyPort) {
 
-        if (firefoxDriver != null) {
-            firefoxDriver.quit();
-        }
-
-        if (firefoxOptions == null) {
+        //if (firefoxOptions == null) {
             firefoxOptions = new FirefoxOptions();
-            firefoxOptions.addArguments("--incognito");
-            firefoxOptions.addArguments("--disable-blink-features=AutomationControlled");
-            firefoxOptions.addArguments("-private");
+            //firefoxOptions.addArguments("--disable-blink-features=AutomationControlled");
+            //firefoxOptions.addArguments("--incognito");
+            //firefoxOptions.addArguments("-private");
+            //firefoxOptions.addArguments("--start-maximized");
             firefoxOptions.setBinary("C:\\Program Files\\Mozilla Firefox\\firefox.exe");
-
+            firefoxOptions.setLogLevel(FirefoxDriverLogLevel.ERROR); // chỉ log lỗi
             firefoxProfile = new FirefoxProfile();
-            firefoxProfile.setPreference("permissions.default.image", 2);
+            //firefoxProfile.setPreference("permissions.default.image", 2);
             firefoxProfile.setPreference("gfx.downloadable_fonts.enabled", false);
             firefoxOptions.setProfile(firefoxProfile);
-        }
+        //}
 
         if (proxyHost != null) {
-            firefoxProxy = new Proxy();
+            if (firefoxProxy == null) {
+                firefoxProxy = new Proxy();
+            }
             firefoxProxy.setHttpProxy("" + proxyHost + ":" + proxyPort);
             firefoxProxy.setSslProxy("" + proxyHost + ":" + proxyPort);
             firefoxOptions.setProxy(firefoxProxy);
@@ -65,11 +88,10 @@ public class CrawlUtil {
         }
 
         firefoxOptions.addPreference("general.useragent.override", CrawlUtil.userAgents.get(random.nextInt(CrawlUtil.userAgents.size())));
-        System.setProperty("webdriver.gecko.driver", "C:\\VarsBot\\firefox_driver\\geckodriver_v0.36.0.exe");
         firefoxDriver = new FirefoxDriver(firefoxOptions);
-        firefoxDriver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
-        firefoxDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-
+        //firefoxDriver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
+        //firefoxDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        //System.setProperty("webdriver.gecko.driver", "C:\\VarsBot\\firefox_driver\\geckodriver_v0.36.0.exe");
         return firefoxDriver;
     }
 

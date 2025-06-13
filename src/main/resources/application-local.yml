@@ -1,0 +1,32 @@
+noodev:
+  logs:
+    level: INFO # Optional. Default is INFO
+    kpi-logs:
+      application-code: MY-APPLICATION # Optional. Default ApplicationCode value
+      service-code: ${spring.application.name} # Optional. Default ServiceCode value
+      allow-url-patterns: /**
+  mariadb:
+    datasource:
+      url: jdbc:mariadb://10.79.60.100:3306/cron_location_db
+      username: bot
+      password: BOT123456
+      jpa:
+        show-sql: true
+      hikari:
+        maximum-pool-size: 6
+        connection-timeout: 300000
+microservice:
+  vars-hybrid-service:
+    url: http://10.79.60.2:8500/vhb
+  vars-id-service:
+    url: http://10.79.60.2:8500/vid
+schedule:
+  update-land-post-status:
+    enabled: true
+    #cron: "0 */30 * * * *" # [Seconds] [Minute] [Hour] [Day of month] [Month] [Day of week]
+    cron: "*/5 * * * * *"
+
+post-server:
+#  url: http://192.168.1.29:8080/
+#url: https://s2s.vars.vn
+  url:  https://api.vars.vn

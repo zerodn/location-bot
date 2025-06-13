@@ -1,7 +1,7 @@
 package com.balofun.bot.feign.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.balofun.bot.dto.ProxyApiDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
