@@ -8,6 +8,9 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -18,15 +21,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class CrawlUtil {
-
+    public static boolean IS_LOADING = false;
+    private static int TIMEOUT_SECONDS = 30;
     private static FirefoxOptions firefoxOptions;
     private static Proxy firefoxProxy;
     private static FirefoxProfile firefoxProfile;
     private static WebDriver firefoxDriver;
     private static WebDriverWait webDriverWait;
     public static Random random = new Random();
+
+    public static Thread watchdog;
 
     public static void retryFirefoxDriver(String url, ProxyApiDTO proxyApiDTO) {
 
@@ -43,7 +50,7 @@ public class CrawlUtil {
 //            System.out.println(String.format("******************* Proxy IP %s", data.realIpAddress + ":" + data.httpPort));
 //            CrawlUtil.loadFirefoxDriver(data.realIpAddress, data.httpPort);
 //        } else {
-            CrawlUtil.loadFirefoxDriver();
+        CrawlUtil.loadFirefoxDriver();
 //        }
         CrawlUtil.getWebDrive().get("https://shopeefood.vn/lien-he");
         CrawlUtil.getWebDrive().get(url);
@@ -64,17 +71,17 @@ public class CrawlUtil {
     public static WebDriver loadFirefoxDriver(String proxyHost, int proxyPort) {
 
         //if (firefoxOptions == null) {
-            firefoxOptions = new FirefoxOptions();
-            //firefoxOptions.addArguments("--disable-blink-features=AutomationControlled");
-            //firefoxOptions.addArguments("--incognito");
-            //firefoxOptions.addArguments("-private");
-            //firefoxOptions.addArguments("--start-maximized");
-            firefoxOptions.setBinary("C:\\Program Files\\Mozilla Firefox\\firefox.exe");
-            firefoxOptions.setLogLevel(FirefoxDriverLogLevel.ERROR); // chỉ log lỗi
-            firefoxProfile = new FirefoxProfile();
-            //firefoxProfile.setPreference("permissions.default.image", 2);
-            firefoxProfile.setPreference("gfx.downloadable_fonts.enabled", false);
-            firefoxOptions.setProfile(firefoxProfile);
+        firefoxOptions = new FirefoxOptions();
+        //firefoxOptions.addArguments("--disable-blink-features=AutomationControlled");
+        //firefoxOptions.addArguments("--incognito");
+        //firefoxOptions.addArguments("-private");
+        //firefoxOptions.addArguments("--start-maximized");
+        firefoxOptions.setBinary("C:\\Program Files\\Mozilla Firefox\\firefox.exe");
+        firefoxOptions.setLogLevel(FirefoxDriverLogLevel.ERROR); // chỉ log lỗi
+        firefoxProfile = new FirefoxProfile();
+        firefoxProfile.setPreference("permissions.default.image", 2);
+        firefoxProfile.setPreference("gfx.downloadable_fonts.enabled", false);
+        firefoxOptions.setProfile(firefoxProfile);
         //}
 
         if (proxyHost != null) {
@@ -83,15 +90,23 @@ public class CrawlUtil {
             }
             firefoxProxy.setHttpProxy("" + proxyHost + ":" + proxyPort);
             firefoxProxy.setSslProxy("" + proxyHost + ":" + proxyPort);
+            //firefoxProxy..blacklistRequests(".*favicon\\.ico.*", 403);
             firefoxOptions.setProxy(firefoxProxy);
             firefoxOptions.setCapability("proxy", firefoxProxy);
         }
 
         firefoxOptions.addPreference("general.useragent.override", CrawlUtil.userAgents.get(random.nextInt(CrawlUtil.userAgents.size())));
+        firefoxOptions.addArguments("--blink-settings=imagesEnabled=false"); // Tắt ảnh, bao gồm favicon
+        LoggingPreferences logPrefs = new LoggingPreferences();
+        logPrefs.enable(LogType.BROWSER, Level.ALL);
+        firefoxOptions.setCapability(CapabilityType.LOGGING_PREFS, logPrefs);
         firefoxDriver = new FirefoxDriver(firefoxOptions);
-        //firefoxDriver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
-        //firefoxDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        firefoxDriver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
+        firefoxDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         //System.setProperty("webdriver.gecko.driver", "C:\\VarsBot\\firefox_driver\\geckodriver_v0.36.0.exe");
+
+
+
         return firefoxDriver;
     }
 
@@ -107,7 +122,7 @@ public class CrawlUtil {
             return null;
         }
         if (webDriverWait == null) {
-            webDriverWait = new WebDriverWait(firefoxDriver, 30);
+            webDriverWait = new WebDriverWait(firefoxDriver, 10);
         }
         return webDriverWait;
     }
